@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>湯けむり恋暦</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#1b2440;--gold:#c9a45c;--paper:#fbf6ec;--pink:#ff8fa8}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;background:#000;overflow:hidden;
+    font-family:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho","YuMincho",serif;user-select:none;-webkit-user-select:none}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  #stage{position:relative;width:1280px;height:720px;overflow:hidden;background:#222;flex:none}
+  #stage.pulse{animation:pulse .5s}
+  @keyframes pulse{0%{filter:none}30%{filter:brightness(1.12) saturate(1.2)}100%{filter:none}}
+  .layer{position:absolute;inset:0}
+  .ph{display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.85);font-size:26px;letter-spacing:.1em;text-shadow:0 2px 6px rgba(0,0,0,.5)}
+  #cg{opacity:0;transition:opacity .6s;pointer-events:none}
+  #cg.on{opacity:1}
+  #vign{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 45%,rgba(120,0,30,.55) 100%)}
+  #vign.on{opacity:1}
+  #chr{position:absolute;left:50%;bottom:0;height:700px;width:467px;transform:translateX(-50%);opacity:0;transition:opacity .35s,left .4s;pointer-events:none}
+  #chr.on{opacity:1}
+  #stage.choosing #chr{left:27%}
+  #chr img{width:100%;height:100%;object-fit:contain;object-position:bottom}
+  .chrph{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:320px;height:620px;border-radius:160px 160px 20px 20px;
+      display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-size:28px;border:3px solid rgba(255,255,255,.6)}
+  #hud{position:absolute;left:16px;top:14px;display:none;gap:12px;align-items:center;background:rgba(27,36,64,.82);
+      border:1px solid var(--gold);border-radius:10px;padding:8px 16px;color:var(--paper);font-size:19px}
+  #hud.on{display:flex}
+  #hud .sc{color:var(--gold);font-weight:700}
+  .bar{width:180px;height:10px;background:rgba(255,255,255,.2);border-radius:5px;overflow:hidden}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,#f5a3b5,var(--pink));transition:width .5s}
+  #pop{position:absolute;left:50%;top:120px;transform:translateX(-50%);font-size:36px;font-weight:700;opacity:0;pointer-events:none;
+      text-shadow:0 2px 8px rgba(0,0,0,.7);white-space:nowrap}
+  #box{position:absolute;left:40px;right:40px;bottom:24px;height:190px;background:rgba(20,27,50,.86);border:2px solid var(--gold);
+      border-radius:14px;padding:30px 40px;color:var(--paper);font-size:27px;line-height:1.6;display:none;cursor:pointer}
+  #box.on{display:block}
+  #name{position:absolute;left:30px;top:-24px;background:var(--navy);border:2px solid var(--gold);color:var(--gold);
+      padding:3px 22px;border-radius:8px;font-size:23px;font-weight:700;display:none}
+  #name.on{display:block}
+  #next{position:absolute;right:22px;bottom:14px;color:var(--gold);font-size:20px;animation:blink 1s infinite;display:none}
+  @keyframes blink{50%{opacity:.2}}
+  #choices{position:absolute;left:520px;right:30px;top:0;bottom:230px;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+  #choices.on{display:flex}
+  #choices button{width:100%;padding:15px 26px;font-family:inherit;font-size:24px;color:var(--paper);
+      background:rgba(27,36,64,.93);border:2px solid var(--gold);border-radius:12px;cursor:pointer;transition:transform .1s,background .2s}
+  #choices button:hover{background:rgba(70,58,30,.95)}
+  #choices button:active{transform:scale(.97)}
+  #timer{width:100%;height:12px;background:rgba(0,0,0,.45);border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,.3)}
+  #timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff5c7a,#ffb3c1)}
+  #timerLabel{color:#fff;font-size:18px;text-shadow:0 1px 4px #000;align-self:flex-end;margin-top:-6px}
+  /* 射的 */
+  #mini{position:absolute;inset:0;display:none;cursor:crosshair}
+  #mini.on{display:block}
+  #mini .shelf{position:absolute;left:140px;right:140px;top:300px;height:24px;background:linear-gradient(#8a5a2b,#5a3a1a);border-radius:4px;box-shadow:0 8px 16px rgba(0,0,0,.5)}
+  #mini .curtain{position:absolute;left:100px;right:100px;top:120px;height:240px;background:repeating-linear-gradient(90deg,#b8323a 0 60px,#f3e6d0 60px 120px);opacity:.92;border-radius:8px;box-shadow:inset 0 -20px 30px rgba(0,0,0,.35)}
+  #target{position:absolute;top:200px;width:110px;height:110px;font-size:84px;line-height:110px;text-align:center;filter:drop-shadow(0 6px 6px rgba(0,0,0,.5))}
+  #target.hit{animation:hit .5s}
+  @keyframes hit{0%{transform:rotate(0)}30%{transform:rotate(-25deg) translateY(-10px)}100%{transform:rotate(0)}}
+  #sight{position:absolute;left:570px;top:185px;width:140px;height:140px;border:4px solid rgba(255,255,255,.9);border-radius:50%;pointer-events:none;
+      box-shadow:0 0 0 2px rgba(0,0,0,.4)}
+  #sight:before,#sight:after{content:"";position:absolute;background:rgba(255,255,255,.9)}
+  #sight:before{left:50%;top:-14px;bottom:-14px;width:3px;transform:translateX(-50%)}
+  #sight:after{top:50%;left:-14px;right:-14px;height:3px;transform:translateY(-50%)}
+  #miniInfo{position:absolute;left:0;right:0;top:400px;text-align:center;color:#fff;font-size:30px;font-weight:700;text-shadow:0 2px 8px #000}
+  #miniHint{position:absolute;left:0;right:0;top:450px;text-align:center;color:#ffe9b0;font-size:22px;text-shadow:0 2px 6px #000}
+  #shotFx{position:absolute;font-size:44px;font-weight:700;pointer-events:none;opacity:0;text-shadow:0 2px 8px #000}
+  /* title */
+  #title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding-top:90px}
+  #title h1{font-size:96px;color:#fff;letter-spacing:.18em;text-shadow:0 0 18px rgba(0,0,0,.7),0 4px 0 var(--navy);font-weight:700}
+  #title .sub{font-size:26px;color:#fff3d6;letter-spacing:.5em;margin-top:10px;padding:4px 18px 4px 28px;background:rgba(27,36,64,.55);border-radius:20px;text-shadow:0 1px 3px #000}
+  #title button{margin-top:280px;font-family:inherit;font-size:30px;padding:14px 60px;color:var(--paper);background:rgba(27,36,64,.88);
+      border:2px solid var(--gold);border-radius:40px;cursor:pointer;letter-spacing:.2em}
+  #title .hint{margin-top:14px;color:#fff;font-size:18px;padding:4px 16px;background:rgba(0,0,0,.35);border-radius:14px}
+  #select{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,14,28,.6)}
+  #select.on{display:flex}
+  #select h2{color:#fff;font-size:34px;letter-spacing:.15em;margin-bottom:22px;text-shadow:0 2px 6px #000}
+  #cards{display:flex;gap:28px}
+  .card{width:350px;background:rgba(27,36,64,.94);border:2px solid var(--gold);border-radius:16px;overflow:hidden;cursor:pointer;color:var(--paper);transition:transform .15s}
+  .card:hover{transform:translateY(-6px)}
+  .card .pic{height:270px;background-size:cover;background-position:center top;display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff}
+  .card .nm{font-size:30px;font-weight:700;color:var(--gold);padding:10px 18px 0}
+  .card .rl{font-size:17px;padding:2px 18px 6px;line-height:1.5}
+  .card .tip{font-size:16px;margin:0 12px 14px;padding:8px 10px;line-height:1.5;background:rgba(255,143,168,.13);border-left:3px solid var(--pink);border-radius:4px}
+  #fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .5s}
+  #fade.on{opacity:1}
+  #endcard{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,14,28,.85);color:var(--paper);gap:14px}
+  #endcard.on{display:flex}
+  #endcard h2{font-size:56px;color:var(--gold);letter-spacing:.2em}
+  #endcard p{font-size:22px;line-height:1.7;text-align:center}
+  #endcard .row{display:flex;gap:20px;margin-top:12px}
+  #endcard button{font-family:inherit;font-size:24px;padding:12px 40px;color:var(--paper);background:var(--navy);border:2px solid var(--gold);border-radius:40px;cursor:pointer}
+  #rotate{position:fixed;inset:0;background:#111;color:#eee;display:none;align-items:center;justify-content:center;font-size:18px;z-index:9;text-align:center;line-height:1.8}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <div id="bg" class="layer ph"></div>
+  <div id="chr"></div>
+  <div id="cg" class="layer ph"></div>
+  <div id="vign"></div>
+  <div id="mini"><div class="curtain"></div><div class="shelf"></div><div id="target"></div><div id="sight"></div>
+    <div id="miniInfo"></div><div id="miniHint">的が照準に重なった瞬間にタップ！</div><div id="shotFx"></div></div>
+  <div id="hud"><span class="sc" id="sc"></span><span>ドキドキ</span><span class="bar"><i id="heart"></i></span></div>
+  <div id="pop"></div>
+  <div id="title">
+    <h1>湯けむり恋暦</h1>
+    <div class="sub">ゆけむり こいごよみ</div>
+    <button id="startBtn">はじめる</button>
+    <div class="hint">1泊2日・約3分　攻めるタイミングを見きわめろ</div>
+  </div>
+  <div id="select"><h2>誰と旅行に行く？</h2><div id="cards"></div></div>
+  <div id="choices"></div>
+  <div id="box"><div id="name"></div><div id="text"></div><div id="next">▼</div></div>
+  <div id="endcard"><h2 id="endTitle"></h2><p id="endText"></p>
+    <div class="row"><button id="retryBtn">同じ人ともう一度</button><button id="againBtn">別の人と行く</button><button id="titleBtn">タイトルへ</button></div></div>
+  <div id="fade"></div>
+</div></div>
+<div id="rotate">スマホは横向きにすると<br>大きく表示されます</div>
+
+<script>
+/* ================= ルール =================
+  選択肢には「タイプ」がある：
+   kind=気づかい / fun=ノリ / smart=知的 / bold=攻める / miss=ハズレ
+  点数はヒロインの好みで変わる（pts）。
+  bold（攻める）は、ドキドキ度が boldAt 以上なら +15、足りなければ -5（早すぎて引かれる）。
+  制限時間内に選ばないと -5。
+  6番目は射的ミニゲーム（命中数で +15 / +10 / +3 / -3）。
+  ドキドキ度80以上で恋人エンド、30以上で友達のまま、それ未満は気まずいエンド。 */
+const H = {
+  aoi:{name:'葵', full:'月見 葵', color:'#2b3f7a',
+    role:'幼なじみ。しっかり者で素直じゃない',
+    tip:'さりげない気づかいに弱い。いきなり攻めると照れて逃げる',
+    pts:{kind:10,fun:5,smart:5,miss:-5}, boldAt:40,
+    boldFail:['……っ、ちょ、調子に乗らないで。','……そういうの、急に言われても困る。'],
+    silence:'……なんで黙るのよ。',
+    intro:[['','商店街の福引で、葵が温泉旅館のペア宿泊券を当てた。'],['葵','一人で行くのももったいないし……付き合いなさいよ。部屋はちゃんと2部屋だから。']],
+    prize:'🐰', miniIntro:'射的だ。……ねえ、あのうさぎのぬいぐるみ、かわいくない？',
+    miniRes:['……ま、気持ちだけもらっとく。','ふふ、下手ね。……でも、ちょっとうれしかった。','……ほんとに取った。……大事にする。'],
+    scenes:[
+      {bg:'bg_title',lines:['わあ……思ってたより、ずっと素敵な旅館。'],ch:[
+        ['葵が当ててくれたおかげだね','kind','smile','でしょ？ もっと感謝していいのよ。'],
+        ['葵と来られて、うれしい','bold','blush','……な、何言ってるのよ。……でも、私も。'],
+        ['早く温泉入りたい','miss','sad','着いた途端それ？ ……相変わらずね。']]},
+      {bg:'bg_room',lines:['お茶、淹れたよ。……小さいころの家族旅行も、いつも一緒だったよね。'],ch:[
+        ['あの頃から、隣にいるのが当たり前だったな','kind','blush','……そうね。当たり前、だった。'],
+        ['今は、隣にいるだけじゃ物足りない','bold','blush','……っ。どういう意味よ、それ。'],
+        ['葵が迷子で泣いてたの、覚えてる','fun','smile','……それ、今言う？ もう、ばか。']]},
+      {bg:'bg_ashiyu',lines:['足湯、気持ちいい……。ねえ、最近、仕事どう？'],ch:[
+        ['葵こそ、無理してない？','kind','smile','……バレてた？ ありがと。'],
+        ['葵に話すと、なんか安心する','bold','blush','……っ、急に何よ。'],
+        ['まあ、普通かな','miss','sad','ふーん。……もうちょっと話してくれてもいいのに。']],
+       cg:[['','並んで足湯につかっていると、肩が少しだけ触れた。'],['葵','……こうしてると、子どものころに戻ったみたい。'],['葵','でも、あのころとは、ちょっと違うね。']]},
+      {bg:'bg_shop',lines:['ロビーの売店、寄っていい？','……ねえ。このおそろいのキーホルダー、どう思う？'],ch:[
+        ['おそろいで買おう','bold','blush','……べ、別におそろいがいいって言ったわけじゃないから。'],
+        ['葵が欲しいなら、買ってくるよ','kind','smile','……じゃあ、1個だけ。……あんたの分も、ね。'],
+        ['ちょっと子どもっぽくない？','miss','sad','……そう。']]},
+      {bg:'bg_dinner',lines:['……こうして向かい合ってご飯食べるの、なんか照れるね。'],ch:[
+        ['葵と食べると、何でもおいしい','bold','blush','……ばか。料理、冷めるわよ。'],
+        ['葵の好きな栗ごはん、あるよ','kind','smile','……覚えててくれたの？'],
+        ['家族旅行みたいで懐かしいね','fun','smile','ふふ、そうね。あのころみたい。']]},
+      {bg:'bg_town',mini:true},
+      {bg:'bg_bridge',lines:['……ねえ。もし私に彼氏ができたら、どうする？'],ch:[
+        ['嫌だ。正直、すごく嫌だ','bold','blush','……なんで、嫌なの。'],
+        ['葵を泣かせるやつなら、許さない','kind','blush','……なによ、それ。……ちょっと、うれしいけど。'],
+        ['葵が幸せなら応援するよ','miss','sad','……そっか。応援、するんだ。']]},
+      {bg:'bg_garden',lines:['中庭の紅葉、ライトアップされてる。……でも、ちょっと寒いね。'],ch:[
+        ['上着、かけてあげる','kind','blush','……あったかい。ありがと。'],
+        ['手、つなぐ？','bold','blush','……今日だけ、なら。'],
+        ['寒いなら部屋に戻る？','miss','sad','……もう少しだけ、ここにいたかったのに。']]},
+      {bg:'bg_garden',lines:['この旅行ね、福引で当たったって言ったけど……','本当は、自分で予約したの。'],ch:[
+        ['知ってた。でも、すごくうれしかった','kind','blush','……知ってたなら、言いなさいよ。'],
+        ['「一緒に来たかった」って、言ってよ','bold','blush','……言えるわけ、ないでしょ。……一緒に、来たかったの。'],
+        ['じゃあ半分払うよ','miss','sad','……そういうことじゃ、ないの。']]},
+      {bg:'bg_garden',lines:['……何か、言いたいことがあるんじゃないの？'],final:true,ch:[
+        ['ずっと好きだった。恋人になってほしい','bold','blush',''],
+        ['これからも、一番近くにいてほしい','kind','smile',''],
+        ['楽しかったね。また来よう','miss','sad','']]}
+    ],
+    end:{love:[['葵','……遅いのよ、ばか。'],['葵','私だって、ずっと……ずっと好きだったんだから。'],['','葵の手が、そっと指にからんだ。']],
+         friend:[['葵','……うん。これからも、一緒にいようね。'],['','その「一緒」が、どういう意味なのか。今夜は、聞けなかった。']],
+         awkward:[['葵','……そうね。楽しかった。'],['葵','先に部屋、戻るね。おやすみ。'],['','振り返らない背中が、少しだけ遠く見えた。']]}
+  },
+  hinata:{name:'ひなた', full:'春日 ひなた', color:'#a8423a',
+    role:'大学のサークル仲間。明るくて元気',
+    tip:'ノリの良さが大好き。小難しい話は苦手。ストレートな言葉にはわりと早く落ちる',
+    pts:{fun:10,kind:5,smart:0,miss:-5}, boldAt:20,
+    boldFail:['えっ……あ、あはは！ なにそれー、冗談うまいね！','……っ！ も、もー、からかわないでよ！'],
+    silence:'……あれ？ 聞いてる？',
+    intro:[['','サークルの紅葉旅行。直前で、ほかの4人が次々とキャンセルした。'],['ひなた','キャンセル料もったいないし……2人で行っちゃう？ 部屋は別々でさ！']],
+    prize:'🧸', miniIntro:'射的やろ！ あのでっかいクマ、取って取って！',
+    miniRes:['あはは、ぜんぶハズレ！ でも楽しかった！','おしいー！ 次はわたしがやる！','すごーい！ 天才！ 一生大事にする！'],
+    scenes:[
+      {bg:'bg_title',lines:['着いたー！ 見て見て、紅葉すっごい！'],ch:[
+        ['紅葉より、はしゃいでるひなたの方がかわいい','bold','blush','なっ……！ 急にそういうのやめてよー！'],
+        ['よし、紅葉と一緒に変顔で写真撮ろう！','fun','smile','撮る撮る！ ……ぶはっ、その顔ずるい！'],
+        ['紅葉の名所の由来、調べてきたよ','smart','normal','へ、へえー……。（むずかしい話きた）']]},
+      {bg:'bg_room',lines:['部屋、別々でよかったー……って、なんでホッとしてるんだろ、わたし。'],ch:[
+        ['意識してくれてるんだ？','bold','blush','ち、ちがっ……くもない、かも。'],
+        ['枕投げできないのは残念だな','fun','smile','あはは！ じゃあ夜、ロビーでやる？'],
+        ['隣の部屋だから、何かあったら呼んで','kind','smile','うん！ 頼りにしてる！']]},
+      {bg:'bg_ashiyu',lines:['足湯であったまったら、ちょっと眠くなってきた……。'],ch:[
+        ['肩、貸そうか','bold','blush','……え、いいの？ じゃあ、ちょっとだけ。'],
+        ['眠気覚ましに、足じゃんけんしよう','fun','smile','なにそれ！ やる！ 最初はグー！'],
+        ['寝たら置いていくよ','miss','sad','えーん、冷たい……。']],
+       cg:[['','気づくと、ひなたが肩にもたれていた。'],['ひなた','……ねえ。こういうの、サークルのみんなには内緒ね。'],['','寝たふりなのか、本当に眠いのか。わからないまま、しばらく動けなかった。']]},
+      {bg:'bg_shop',lines:['見て見て、ご当地ストラップ！ かわいい！'],ch:[
+        ['記念に、おそろいで買おう','bold','blush','えっ……う、うん！ 買う！'],
+        ['一番ヘンなやつを選び合おう','fun','smile','のった！ じゃあわたしは、この謎のキノコ！'],
+        ['サークルのみんなへのお土産、選ぼうか','miss','sad','……あ、うん。そうだね。']]},
+      {bg:'bg_dinner',lines:['見て、カニ！ ……あ、でも殻むくの苦手なんだよね。'],ch:[
+        ['むいてあげるよ','kind','blush','……やさしすぎない？ ずるい。'],
+        ['どっちが早くむけるか、勝負！','fun','smile','よーし、負けないよ！'],
+        ['カニの生態について話そうか','smart','normal','えっ、今？']]},
+      {bg:'bg_town',mini:true},
+      {bg:'bg_bridge',lines:['……わたしたちってさ、サークルで「仲良しコンビ」って言われてるじゃん。','それ、ちょっとだけ、いやなんだ。'],ch:[
+        ['じゃあ、コンビじゃなくて何がいい？','bold','blush','……それ、わたしに言わせる？'],
+        ['じゃあ、コンビ名を変えよう','fun','smile','あはは、そういうことじゃなーい！ ……でも、ちょっと元気出た。'],
+        ['仲いいのは、いいことじゃない？','miss','sad','……そうだよね。']]},
+      {bg:'bg_garden',lines:['ライトアップ、きれいだね……。ねえ、手、冷たくない？'],ch:[
+        ['手をつなぐ','bold','blush','……っ！ あったかい。'],
+        ['カイロあるよ。半分こしよう','kind','smile','やった！ ……えへへ、あったかいね。'],
+        ['全然平気','miss','sad','……そっか。']]},
+      {bg:'bg_garden',lines:['……ねえ。来年の紅葉も、二人で見に来たいな。'],ch:[
+        ['来年も、その先も','bold','blush','……もう。そういうとこだよ。'],
+        ['来年は、紅葉で変顔コンテストだな','fun','smile','あはは！ 約束ね！'],
+        ['みんなも誘う？','miss','sad','……そうじゃ、なくて。']]},
+      {bg:'bg_garden',lines:['ねえ。わたしたち、このままでいいのかな。'],final:true,ch:[
+        ['よくない。ひなたが好きだ。付き合ってほしい','bold','blush',''],
+        ['ひなたといるのが、一番楽しい','fun','smile',''],
+        ['このままでも楽しいよ','miss','sad','']]}
+    ],
+    end:{love:[['ひなた','……やったぁ。'],['ひなた','ずっと、言ってほしかったんだよ。……大好き！'],['','ひなたが、思いきり腕に飛びついてきた。']],
+         friend:[['ひなた','……うん！ わたしも楽しい！'],['','そう言って笑うひなたは、ほんの少しだけ、さみしそうに見えた。']],
+         awkward:[['ひなた','……あ、あはは。そっか。そうだよね。'],['ひなた','わたし、先にお風呂いってくる！'],['','走っていく足音が、やけに大きく響いた。']]}
+  },
+  shizuku:{name:'しずく', full:'白石 しずく', color:'#7d679c',
+    role:'職場の先輩。知的でクール',
+    tip:'知的な会話が好き。甘い言葉は、心を開いてからでないと冷められる',
+    pts:{smart:10,kind:5,fun:5,miss:-5}, boldAt:50,
+    boldFail:['……そういう台詞、誰にでも言ってるの？','まだ早いわ。……百年くらいね。'],
+    silence:'……返事もできないの？',
+    intro:[['','地方出張の帰り道。白石先輩が、ふと足を止めた。'],['しずく','せっかくだから、一泊していかない？ ……部屋は別々よ、もちろん。']],
+    prize:'🐱', miniIntro:'射的……やったことないわ。きみ、得意？ あの小さな招き猫、ほしいかも。',
+    miniRes:['……ふふ。射的の才能は、なさそうね。','惜しかったわね。……でも、一生懸命なのは悪くない。','……ありがとう。デスクに飾るわ。……会社の、ね。'],
+    scenes:[
+      {bg:'bg_title',lines:['……悪くない宿ね。昔、小説の舞台になったらしいわ。'],ch:[
+        ['どんな小説ですか？ 読んでみたいです','smart','smile','興味ある？ ……あとで教えてあげる。'],
+        ['先輩と来られて、うれしいです','bold','blush','……そう。'],
+        ['早く仕事のメール返さないと','miss','sad','……今日くらい、忘れなさい。']]},
+      {bg:'bg_room',lines:['お茶を淹れたわ。……仕事以外で二人きりになるの、初めてね。'],ch:[
+        ['会社とは違う先輩が見られて、うれしいです','bold','blush','……そういうこと、さらっと言わないで。'],
+        ['お茶を淹れるときだけ、眼鏡が曇りますね','fun','smile','……観察眼だけは一流ね。'],
+        ['香りがいいですね。玉露ですか？','smart','smile','わかるの？ ……少し見直したわ。']]},
+      {bg:'bg_ashiyu',lines:['足湯なんて、何年ぶりかしら。','……ねえ。どうして私の誘いに乗ったの？'],ch:[
+        ['先輩と、もっと話したかったからです','bold','blush','……そう。そうなの。'],
+        ['その小説の景色を、先輩と見たくて','smart','blush','……ずいぶん文学的な理由ね。'],
+        ['出張で疲れてたので','miss','sad','……そう。正直ね。']],
+       cg:[['','先輩が眼鏡を外して、湯けむりを見つめていた。'],['しずく','眼鏡を外すと、全部ぼやけて見えるの。'],['しずく','……今は、そのほうが楽。きみの顔、まっすぐ見なくて済むから。']]},
+      {bg:'bg_shop',lines:['……この売店、古本も置いてるのね。','きみ、本は読む？'],ch:[
+        ['先輩のおすすめが知りたいです','smart','blush','……じゃあ、これ。私がいちばん好きな本。'],
+        ['本より、先輩のことが知りたいです','bold','blush','……生意気。'],
+        ['あんまり読まないです','miss','sad','……そう。']]},
+      {bg:'bg_dinner',lines:['お酒、少しだけ飲む？ ……きみの前で酔うのは、ちょっと怖いけど。'],ch:[
+        ['無理しないで、お茶で乾杯しましょう','kind','blush','……そういうところよ。'],
+        ['酔った先輩も、見てみたいです','bold','smile','生意気ね。……一杯だけよ。'],
+        ['じゃあ、一人で飲みますね','miss','sad','……そう。']]},
+      {bg:'bg_town',mini:true},
+      {bg:'bg_bridge',lines:['ねえ。私、会社では怖い先輩でしょう？'],ch:[
+        ['怖くないです。一番頼りにしてます','kind','blush','……ずるい答え。'],
+        ['怖いところも含めて、好きです','bold','blush','……っ。……ずいぶん、はっきり言うのね。'],
+        ['はい、かなり','fun','smile','……正直ね。嫌いじゃないわ。']]},
+      {bg:'bg_garden',lines:['……眼鏡、湯気で曇っちゃった。前が見えないわ。'],ch:[
+        ['手を引いて歩く','bold','blush','……ありがとう。離さないでね。'],
+        ['「見えないほうが楽」って、足湯で言ってましたね','smart','blush','……覚えてたの。ずるいわね。'],
+        ['ここで待ってますね','miss','sad','……待ってるだけ、なのね。']]},
+      {bg:'bg_garden',lines:['本当はね。出張の帰りに一泊するって、ずっと前から決めてたの。','……きみと。'],ch:[
+        ['実は、誘われるのを待ってました','bold','blush','……もう。年上をからかわないで。'],
+        ['小説なら、ここが一番いい場面ですね','smart','blush','……ほんと、そういうところ。'],
+        ['計画的ですね','miss','sad','……そういう感想なのね。']]},
+      {bg:'bg_garden',lines:['……今夜のこと。明日になったら、全部なかったことにする？'],final:true,ch:[
+        ['しません。先輩が好きです。付き合ってください','bold','blush',''],
+        ['なかったことには、したくないです','kind','smile',''],
+        ['会社では、いつも通りにしましょう','miss','sad','']]}
+    ],
+    end:{love:[['しずく','……ずるいわね。先に言われちゃった。'],['しずく','私も、好きよ。……会社では、内緒ね。'],['','そう言って笑った先輩の顔を、はじめて見た気がした。']],
+         friend:[['しずく','……そう。じゃあ、続きはまたいつか、ね。'],['','先輩はそれ以上何も言わず、月を見上げていた。']],
+         awkward:[['しずく','……そうね。それがいいわ。'],['しずく','おやすみなさい。明日、遅れないでね。'],['','いつもの「先輩」の声に戻っていた。']]}
+  }
+};
+const TIME=7, TIME_FINAL=5;   // 選択の制限時間（秒）
+
+/* ================= 画像 ================= */
+const IMG_DIR='images/';
+const BGS=['bg_title','bg_room','bg_ashiyu','bg_shop','bg_dinner','bg_town','bg_bridge','bg_garden'];
+const BG_ALIAS={bg_shop:'bg_lobby',bg_bridge:'bg_town',bg_dinner:'bg_room',bg_ashiyu:'bg_garden'};
+const BG_PH={bg_title:'linear-gradient(#3b2a4f,#c9774a 70%,#5a2f22)',bg_room:'linear-gradient(#c7a96b,#8a6a3a)',bg_ashiyu:'linear-gradient(#8a9aa0,#5a4a3a)',
+  bg_shop:'linear-gradient(#6b4a2e,#b88a5a)',bg_dinner:'linear-gradient(#7a3a22,#c99a5a)',bg_town:'linear-gradient(#141a33,#5a3a2a)',
+  bg_bridge:'linear-gradient(#0f1830,#3a3050)',bg_garden:'linear-gradient(#10101e,#7a2a1a)'};
+const cache={};
+function loadImg(name,key,exts=['png']){return new Promise(res=>{let k=0;const im=new Image();
+  im.onload=()=>{let u=im.src;if(key){try{u=chromaKey(im)}catch(e){}}cache[name]=u;res()};
+  im.onerror=()=>{k++;if(k<exts.length)im.src=IMG_DIR+name+'.'+exts[k];else{cache[name]=null;res()}};im.src=IMG_DIR+name+'.'+exts[0];});}
+function chromaKey(im){const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;
+  const x=c.getContext('2d');x.drawImage(im,0,0);const d=x.getImageData(0,0,c.width,c.height),p=d.data;
+  for(let i=0;i<p.length;i+=4){const r=p[i],g=p[i+1],b=p[i+2],m=Math.max(r,b),df=g-m;
+    if(df>20){p[i+3]=Math.min(p[i+3],Math.max(0,255-(df-20)*3.2));p[i+1]=Math.min(g,m+5);}}
+  x.putImageData(d,0,0);return c.toDataURL('image/png');}
+async function preload(){const j=[];[...BGS,'bg_lobby'].forEach(n=>j.push(loadImg(n,false,['jpg','png'])));
+  for(const h in H){for(const e of ['normal','smile','blush','sad'])j.push(loadImg(`chr_${h}_casual_${e}`,true));
+    j.push(loadImg(`ev_${h}_1`,false,['png','jpg']));j.push(loadImg(`ev_${h}_end`,false,['png','jpg']));}
+  await Promise.all(j);}
+
+/* ================= 画面 ================= */
+const $=id=>document.getElementById(id);
+const bgEl=$('bg'),chrEl=$('chr'),cgEl=$('cg'),box=$('box'),nameEl=$('name'),textEl=$('text'),nextEl=$('next'),choicesEl=$('choices');
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);$('stage').style.transform=`scale(${s})`;
+  $('rotate').style.display=(innerHeight>innerWidth&&innerWidth<700)?'flex':'none';}
+addEventListener('resize',fit);fit();$('rotate').onclick=()=>$('rotate').style.display='none';
+function setBg(n){if(!cache[n]&&cache[BG_ALIAS[n]])n=BG_ALIAS[n];
+  if(cache[n]){bgEl.style.background=`url(${cache[n]}) center/cover`;bgEl.textContent='';}
+  else{bgEl.style.background=BG_PH[n]||'#333';bgEl.textContent='';}}
+function chrUrl(h,e){for(const n of [`chr_${h}_casual_${e}`,`chr_${h}_casual_normal`])if(cache[n])return cache[n];return null;}
+function showChr(h,e='normal'){const u=chrUrl(h,e);
+  chrEl.innerHTML=u?`<img src="${u}" alt="">`:`<div class="chrph" style="background:${H[h].color}">${H[h].name}</div>`;chrEl.classList.add('on');}
+function hideChr(){chrEl.classList.remove('on');}
+function showCG(n){cgEl.style.background=`url(${cache[n]}) center/cover`;cgEl.classList.add('on');}
+function hideCG(){cgEl.classList.remove('on');}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+async function fade(fn){$('fade').classList.add('on');await wait(450);fn&&fn();$('fade').classList.remove('on');await wait(350);}
+
+/* 鼓動の音（WebAudio） */
+let AC=null;
+function beat(strong){if(!AC)return;const t=AC.currentTime;
+  [0,0.16].forEach((dt,k)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(k?55:62,t+dt);
+    o.frequency.exponentialRampToValueAtTime(38,t+dt+0.12);g.gain.setValueAtTime(0.0001,t+dt);g.gain.exponentialRampToValueAtTime(strong?0.9:0.55,t+dt+0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dt+0.16);o.connect(g).connect(AC.destination);o.start(t+dt);o.stop(t+dt+0.2);});}
+function blip(f,d=0.08,v=0.25,type='square'){if(!AC)return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d+0.02);}
+
+/* テキスト */
+let advance=null,typing=false,full='';
+function say(name,text){return new Promise(res=>{box.classList.add('on');
+  if(name){nameEl.textContent=name;nameEl.classList.add('on');}else nameEl.classList.remove('on');
+  full=text;textEl.textContent='';nextEl.style.display='none';typing=true;let i=0;
+  const t=setInterval(()=>{if(!typing){clearInterval(t);return;}i++;textEl.textContent=full.slice(0,i);
+    if(i>=full.length){typing=false;clearInterval(t);nextEl.style.display='block';}},28);
+  advance=()=>{if(typing){typing=false;textEl.textContent=full;nextEl.style.display='block';return;}advance=null;res();};});}
+box.addEventListener('click',()=>advance&&advance());
+addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&advance){e.preventDefault();advance();}});
+
+/* 制限時間つき選択。時間切れは -1 */
+function choose(labels,sec){return new Promise(res=>{choicesEl.innerHTML='';
+  const tl=document.createElement('div');tl.id='timer';tl.innerHTML='<i></i>';choicesEl.appendChild(tl);
+  const lb=document.createElement('div');lb.id='timerLabel';choicesEl.appendChild(lb);
+  let done=false,left=sec*1000,last=performance.now(),nextBeat=0;
+  const finish=i=>{if(done)return;done=true;cancelAnimationFrame(raf);choicesEl.classList.remove('on');$('stage').classList.remove('choosing');$('vign').classList.remove('on');res(i);};
+  labels.forEach((l,i)=>{const b=document.createElement('button');b.textContent=l;b.onclick=()=>{blip(880,.05,.12,'sine');finish(i);};choicesEl.appendChild(b);});
+  choicesEl.classList.add('on');$('stage').classList.add('choosing');
+  let raf;const tick=now=>{const dt=now-last;last=now;left-=dt;
+    tl.firstChild.style.width=Math.max(0,left/(sec*1000)*100)+'%';lb.textContent=`のこり ${Math.max(0,Math.ceil(left/1000))} 秒`;
+    const urgent=left<3000;$('vign').classList.toggle('on',urgent);
+    nextBeat-=dt;if(nextBeat<=0){beat(urgent);if(urgent){$('stage').classList.remove('pulse');void $('stage').offsetWidth;$('stage').classList.add('pulse');}
+      nextBeat=urgent?430:850;}
+    if(left<=0){finish(-1);return;}raf=requestAnimationFrame(tick);};
+  raf=requestAnimationFrame(tick);});}
+
+/* ================= 射的ミニゲーム ================= */
+function shooting(prize){return new Promise(res=>{
+  const m=$('mini'),tg=$('target'),info=$('miniInfo'),fx=$('shotFx');
+  tg.textContent=prize;m.classList.add('on');let shots=5,hits=0,t0=performance.now(),speed=1,busy=false,raf;
+  const upd=()=>info.textContent=`コルク残り ${shots}発　命中 ${hits}`;upd();
+  const pos=now=>{const t=(now-t0)/1000;return 640-55+Math.sin(t*1.0*speed)*360+Math.sin(t*2.3*speed)*20;};
+  const loop=now=>{tg.style.left=pos(now)+'px';raf=requestAnimationFrame(loop);};raf=requestAnimationFrame(loop);
+  m.onclick=()=>{if(busy||shots<=0)return;busy=true;shots--;blip(180,.06,.3,'square');
+    const x=parseFloat(tg.style.left)+55,hit=Math.abs(x-640)<72;
+    fx.style.left=(hit?x-40:600)+'px';fx.style.top='150px';fx.textContent=hit?'命中！':'はずれ';fx.style.color=hit?'#ffd75e':'#cfd8ea';
+    fx.style.transition='none';fx.style.opacity=1;requestAnimationFrame(()=>{fx.style.transition='opacity .6s .2s';fx.style.opacity=0;});
+    if(hit){hits++;tg.classList.remove('hit');void tg.offsetWidth;tg.classList.add('hit');blip(1320,.12,.2,'triangle');}
+    speed+=0.1;upd();
+    setTimeout(()=>{busy=false;if(shots<=0){cancelAnimationFrame(raf);setTimeout(()=>{m.classList.remove('on');m.onclick=null;res(hits);},500);}},250);};
+});}
+
+/* ================= 進行 ================= */
+let score=0,cur=null;
+function hud(i){$('hud').classList.add('on');$('sc').textContent=`${i}/10`;$('heart').style.width=Math.max(0,Math.min(100,score))+'%';}
+function pop(d,text){const p=$('pop');p.textContent=text||(d>=15?'♥♥ ドキッ！！':d>=10?'♥ ドキッ！':d>0?'♡ いい感じ':'… すれ違い');p.style.color=d>0?'#ff8fa8':'#b8c4dd';
+  p.style.transition='none';p.style.top='140px';p.style.opacity=1;requestAnimationFrame(()=>{p.style.transition='opacity .6s .8s,top 1.4s';p.style.top='96px';p.style.opacity=0;});}
+function showSelect(){return new Promise(res=>{const c=$('cards');c.innerHTML='';
+  for(const h in H){const d=document.createElement('div');d.className='card';const u=chrUrl(h,'smile');
+    d.innerHTML=`<div class="pic" style="${u?`background-image:url(${u});background-color:#2a3355`:`background:${H[h].color}`}">${u?'':H[h].name}</div><div class="nm">${H[h].name}</div><div class="rl">${H[h].role}</div><div class="tip">攻略ヒント：${H[h].tip}</div>`;
+    d.onclick=()=>{$('select').classList.remove('on');res(h);};c.appendChild(d);}
+  $('select').classList.add('on');});}
+
+async function play(h){
+  const R=H[h];score=0;cur=h;
+  await fade(()=>{$('title').style.display='none';setBg('bg_title');hideChr();});
+  for(const [n,l] of R.intro){if(n)showChr(h,'smile');await say(n,l);}
+  for(let i=0;i<R.scenes.length;i++){
+    const s=R.scenes[i];
+    if(i===0||s.bg!==R.scenes[i-1].bg) await fade(()=>{setBg(s.bg);showChr(h,'normal');}); else showChr(h,'normal');
+    if(i===4) await say('','日が暮れて、夕食の時間になった。');
+    if(i===5) await say('','夕食のあと、二人で夜の温泉街へ出た。');
+    hud(i+1);
+    if(s.mini){ // 射的
+      await say(R.name,R.miniIntro);
+      await say('','射的に挑戦！ コルクは5発。');
+      box.classList.remove('on');hideChr();
+      const hits=await shooting(R.prize);
+      const d=hits>=3?15:hits===2?10:hits===1?3:-3;score+=d;hud(i+1);
+      showChr(h,hits>=2?'blush':hits===1?'smile':'normal');pop(d,hits>=2?`🎯 ${hits}発命中！`:hits===1?'🎯 1発命中':'🎯 全部はずれ…');
+      await say(R.name,R.miniRes[hits>=2?2:hits===1?1:0]);
+      continue;
+    }
+    for(const l of s.lines) await say(R.name,l);
+    const order=[0,1,2].sort(()=>Math.random()-.5);
+    const pick=await choose(order.map(j=>s.ch[j][0]),s.final?TIME_FINAL:TIME);
+    if(pick<0){score-=5;hud(i+1);pop(-5,'… 言葉が出なかった');showChr(h,'sad');await say('','……とっさに、何も言えなかった。');await say(R.name,R.silence);continue;}
+    const [_,type,e,reply]=s.ch[order[pick]];
+    let d,line=reply,ex=e;
+    if(type==='bold'){
+      if(score>=R.boldAt){d=15;}else{d=-5;ex='sad';line=R.boldFail[Math.floor(Math.random()*R.boldFail.length)];}
+    }else{d=R.pts[type];if(d<=0)ex=type==='miss'?'sad':'normal';}
+    score+=d;hud(i+1);pop(d);showChr(h,ex);
+    if(!s.final&&line) await say(R.name,line);
+    if(s.final&&type==='bold'&&d<0) await say(R.name,line);
+    if(s.cg){const has=!!cache[`ev_${h}_1`];
+      if(has){hideChr();await fade(()=>showCG(`ev_${h}_1`));}else showChr(h,'blush');
+      for(const [n,l] of s.cg)await say(n,l);
+      if(has)await fade(()=>{hideCG();showChr(h,'normal');});}
+  }
+  // エンディング
+  $('hud').classList.remove('on');
+  const type=score>=80?'love':score>=30?'friend':'awkward';
+  if(type==='love'){if(cache[`ev_${h}_end`]){hideChr();await fade(()=>showCG(`ev_${h}_end`));}else showChr(h,'blush');}
+  else showChr(h,type==='friend'?'smile':'sad');
+  for(const [n,l] of R.end[type]) await say(n,l);
+  box.classList.remove('on');
+  const T={love:['恋人エンド','友達以上恋人未満、卒業。'],friend:['友達のままエンド','あと一歩、踏み出せなかった。'],awkward:['ちょっと気まずいエンド','帰りの電車は、少し静かだった。']}[type];
+  const adv=type==='love'?'おめでとう！ 別の人とも行ってみる？':`ヒント：${R.tip}`;
+  $('endTitle').textContent=T[0];$('endText').innerHTML=`${R.full}<br>${T[1]}<br><br>ドキドキ度 ${Math.max(0,score)}<br><small>${adv}</small>`;
+  $('endcard').classList.add('on');
+}
+function audioOn(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){}}
+async function start(){const h=await showSelect();await play(h);}
+function reset(){$('endcard').classList.remove('on');hideCG();hideChr();setBg('bg_title');}
+function toTitle(){reset();box.classList.remove('on');$('hud').classList.remove('on');$('select').classList.remove('on');$('title').style.display='flex';}
+$('startBtn').onclick=()=>{audioOn();$('title').style.display='none';start();};
+$('retryBtn').onclick=()=>{reset();play(cur);};
+$('againBtn').onclick=()=>{reset();start();};
+$('titleBtn').onclick=toTitle;
+(async()=>{await preload();toTitle();})();
+</script>
+</body>
+</html>
